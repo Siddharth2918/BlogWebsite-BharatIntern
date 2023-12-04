@@ -6,7 +6,7 @@ const app = express();
 const PORT = 3000 || process.env.port;
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
-    secret: 'your-secret-key', // Change this to a secure random string
+    secret: 'your-secret-key',
     resave: false,
     saveUninitialized: true
 }));
@@ -17,12 +17,10 @@ const isAuthenticated = (req, res, next) => {
       res.redirect('/');
     }
 };
-// connect to mongo db database locally
 mongoose.connect(
     `mongodb://127.0.0.1:27017/BlogDB`
 );
 
-// Registration and login
 const SignUpSchema = new mongoose.Schema({
     fname: String,
     lname: String,
@@ -30,6 +28,7 @@ const SignUpSchema = new mongoose.Schema({
     password: String,
 });
 const BlogSchema = new mongoose.Schema({
+    postedBy: String,
     heading: String,
     time: String,
     date: String,
@@ -47,16 +46,14 @@ app.get("/home", isAuthenticated, async (req, res) => {
         let htmls = fs.readFileSync(__dirname + "/pages/mainPage.html", "utf8");
         const array = await Blogs.find();
         array.reverse();
-        // let htmls="";
-        // const array = [];
         let posts = "";
         array.forEach((element) => {
-            posts += `<article class="flex max-w-xl flex-col items-start justify-between">
+            posts += `<article class="flex max-w-xl flex-col items-start justify-between" style="border: 2px solid black; padding: 10%; border-radius: 5%; transition: transform 0.3s ease-in-out;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
             <div class="flex items-center gap-x-4 text-xs">
               <time datetime="2020-03-16" class="text-gray-500">${element.date} ${element.time}</time>
             </div>
             <div class="group relative">
-              <h3 class="mt-3 text-lg font-semibold leading-6 text-gray-900 group-hover:text-gray-600">
+              <h3 class="mt-3 text-lg font-bold leading-6 text-gray-900 group-hover:text-gray-600">
                 <a href="/readmore/${element._id}" target="_blank">
                   <span class="absolute inset-0"></span>
                   ${element.heading}
@@ -67,9 +64,9 @@ app.get("/home", isAuthenticated, async (req, res) => {
             <div class="relative mt-8 flex items-center gap-x-4">
               <div class="text-sm leading-6">
                 <p class="font-semibold text-gray-900">
-                  <p href="#">
+                  <p>
                     <span class="absolute inset-0"></span>
-                    Michael Foster
+                    Posted by - ${element.postedBy}
                   </p>
                 </p>
               </div>
@@ -81,7 +78,6 @@ app.get("/home", isAuthenticated, async (req, res) => {
     } catch (error) {
         res.send(error);
     }
-    // res.sendFile(__dirname+'/pages/mainPage.html');
 });
 app.get("/signup", (req, res) => {
     res.sendFile(__dirname + "/pages/signupPage.html");
@@ -98,34 +94,45 @@ app.get("/readmore/:id", async (req, res) => {
         }
         const fs=require("fs");
         let html=fs.readFileSync(__dirname + '/pages/selectedBlog.html', 'utf8');
-        let x = `<article class="flex max-w-xl flex-col items-start justify-between">
-        <div class="flex items-center gap-x-4 text-xs">
-          <time datetime="2020-03-16" class="text-gray-500">${blog.date} ${blog.time}</time>
+      //   let x = `<article class="flex max-w-xl flex-col items-start justify-between">
+      //   <div class="flex items-center gap-x-4 text-xs">
+      //     <time datetime="2020-03-16" class="text-gray-500">${blog.date} ${blog.time}</time>
+      //   </div>
+      //   <div class="group relative">
+      //     <h3 class="mt-3 text-lg font-semibold leading-6 text-gray-900 group-hover:text-gray-600">
+      //       <a href="/readmore/${blog._id}">
+      //         <span class="absolute inset-0"></span>
+      //         ${blog.heading}
+      //       </a>
+      //     </h3>
+      //     <p class="mt-5 text-sm leading-6 text-gray-600">${blog.content}</p>
+      //   </div>
+      //   <div class="relative mt-8 flex items-center gap-x-4">
+      //     <div class="text-sm leading-6">
+      //       <p class="font-semibold text-gray-900">
+      //         <p href="#">
+      //           <span class="absolute inset-0"></span>
+      //           ${blog.postedBy}
+      //         </p>
+      //       </p>
+      //     </div>
+      //   </div>
+      // </article>`
+        let x= `<section>
+        <div class=" flex flex-col items-center px-5 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
+            <div class="flex flex-col w-full max-w-3xl mx-auto prose text-left prose-blue">
+                <div class="w-full mx-auto">
+                    <h2>${blog.heading}.</h2>
+                    <h3>Posted by - ${blog.postedBy}</h3>
+                    <p>${blog.date} ${blog.time}</p>
+                    <p>${blog.content}</p>
+                </div>
+            </div>
         </div>
-        <div class="group relative">
-          <h3 class="mt-3 text-lg font-semibold leading-6 text-gray-900 group-hover:text-gray-600">
-            <a href="/readmore/${blog._id}">
-              <span class="absolute inset-0"></span>
-              ${blog.heading}
-            </a>
-          </h3>
-          <p class="mt-5 text-sm leading-6 text-gray-600">${blog.content}</p>
-        </div>
-        <div class="relative mt-8 flex items-center gap-x-4">
-          <div class="text-sm leading-6">
-            <p class="font-semibold text-gray-900">
-              <p href="#">
-                <span class="absolute inset-0"></span>
-                Michael Foster
-              </p>
-            </p>
-          </div>
-        </div>
-      </article>`
-        // console.log(html)
+    </section>
+    `
         html = html.replace('{ readmore }', x);
         html = html.replace('{ docname }', blog.heading);
-        // console.log(html)
         res.send(html)
     } catch (error) {
         res.status(500).send(error);
@@ -168,10 +175,11 @@ app.post("/", async (req, res) => {
             res.redirect('/signup');
         }
         else if (exists && exists.password == password) {
-            req.session.user = {userId: exists._id, email:exists.email};
+            const name = exists.fname + " " + exists.lname;
+            req.session.user = {userId: exists._id, email:exists.email, username: name};
             res.redirect("/home");
         } else {
-            res.send("Invalid Password ans/or Email.");
+            res.send("Invalid Password!");
         }
     } catch (error) {
         res.send(error);
@@ -188,8 +196,9 @@ app.post("/createBlog",isAuthenticated, async (req, res) => {
             (currentDate.getMonth() + 1) +
             "/" +
             currentDate.getFullYear();
-        // console.log(heading+content);
+        const postedBy = req.session.user.username;
         const data = new Blogs({
+            postedBy,
             heading,
             time,
             date,
