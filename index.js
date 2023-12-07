@@ -85,7 +85,7 @@ app.get("/signup", (req, res) => {
 app.get("/createBlog", isAuthenticated, (req, res) => {
     res.sendFile(__dirname + "/pages/createBlogPage.html");
 });
-app.get("/readmore/:id", async (req, res) => {
+app.get("/readmore/:id", isAuthenticated , async (req, res) => {
     try {
         const blogId = req.params.id;
         const blog = await Blogs.findById(blogId);
@@ -94,38 +94,14 @@ app.get("/readmore/:id", async (req, res) => {
         }
         const fs=require("fs");
         let html=fs.readFileSync(__dirname + '/pages/selectedBlog.html', 'utf8');
-      //   let x = `<article class="flex max-w-xl flex-col items-start justify-between">
-      //   <div class="flex items-center gap-x-4 text-xs">
-      //     <time datetime="2020-03-16" class="text-gray-500">${blog.date} ${blog.time}</time>
-      //   </div>
-      //   <div class="group relative">
-      //     <h3 class="mt-3 text-lg font-semibold leading-6 text-gray-900 group-hover:text-gray-600">
-      //       <a href="/readmore/${blog._id}">
-      //         <span class="absolute inset-0"></span>
-      //         ${blog.heading}
-      //       </a>
-      //     </h3>
-      //     <p class="mt-5 text-sm leading-6 text-gray-600">${blog.content}</p>
-      //   </div>
-      //   <div class="relative mt-8 flex items-center gap-x-4">
-      //     <div class="text-sm leading-6">
-      //       <p class="font-semibold text-gray-900">
-      //         <p href="#">
-      //           <span class="absolute inset-0"></span>
-      //           ${blog.postedBy}
-      //         </p>
-      //       </p>
-      //     </div>
-      //   </div>
-      // </article>`
         let x= `<section>
         <div class=" flex flex-col items-center px-5 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
             <div class="flex flex-col w-full max-w-3xl mx-auto prose text-left prose-blue">
                 <div class="w-full mx-auto">
-                    <h2>${blog.heading}.</h2>
-                    <h3>Posted by - ${blog.postedBy}</h3>
+                    <h1 class="text-4xl font-bold mb-4">${blog.heading}.</h2>
+                    <h3 class="text-2xl font-bold mb-4">Posted by - ${blog.postedBy}</h3>
                     <p>${blog.date} ${blog.time}</p>
-                    <p>${blog.content}</p>
+                    <h4 class="text-xl mb-4">${blog.content}</h4>
                 </div>
             </div>
         </div>
